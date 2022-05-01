@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const Search = () => {
-  const [term, setTerm] = useState('');
+  const [term, setTerm] = useState('programming');
+  const [debouncedTerm, setDebouncedTerm] = useState(term);
+  const [results, setResults] = useState([]);
 
   // useEffect(() => {
   //   console.log('I ONLY RUN ONCE');
@@ -13,12 +15,53 @@ const Search = () => {
   // });
 
   useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedTerm(term);
+    }, 1000);
+
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [term]);
+
+  // Activate when the debouncedTerm is changed
+  useEffect(() => {
     const search = async () => {
-      await axios.get('sdsds');
+      const { data } = await axios.get('https://en.wikipedia.org/w/api.php', {
+        params: {
+          action: 'query',
+          list: 'search',
+          origin: '*',
+          format: 'json',
+          srsearch: debouncedTerm,
+        },
+      });
+
+      setResults(data.query.search);
     };
 
     search();
-  }, [term]);
+  }, [debouncedTerm]);
+
+  const renderedResults = results.map((result) => {
+    return (
+      <div key={result.pageid} className="item">
+        <div className="right floated content">
+          <a
+            className="ui button"
+            href={`https://en.wikipedia.org?curid=${result.pageid}`}
+          >
+            Go
+          </a>
+        </div>
+        <div className="content">
+          <div className="header">{result.title}</div>
+          <span dangerouslySetInnerHTML={{ __html: result.snippet }}></span>
+          {/* {result.snippet} */}
+        </div>
+      </div>
+    );
+  });
 
   return (
     <div>
@@ -27,11 +70,14 @@ const Search = () => {
           <label>Enter Search Term</label>
           <input
             value={term}
-            onChange={(e) => setTerm(e.target.value)}
+            onChange={(e) => {
+              setTerm(e.target.value);
+            }}
             className="input"
           />
         </div>
       </div>
+      <div className="ui celled list">{renderedResults}</div>
     </div>
   );
 };
