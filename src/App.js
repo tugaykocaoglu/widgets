@@ -26,7 +26,7 @@ const options = [
 
 export default () => {
   return (
-    <div>
+    <div className="ui container">
       {/* <Accordion items={items} /> */}
       {/* <Search /> */}
       <Dropdown options={options} />
